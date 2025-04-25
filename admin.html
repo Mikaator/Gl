@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="de" class="dark-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow-Ups Admin</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --card-bg: #1e1e1e;
+            --accent-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --border-color: #333333;
+        }
+
+        .light-mode {
+            --bg-color: #f5f5f5;
+            --text-color: #121212;
+            --card-bg: #ffffff;
+            --accent-color: #6200ee;
+            --secondary-color: #03dac6;
+            --error-color: #b00020;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-area:hover {
+            background-color: rgba(128, 128, 128, 0.1);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #9d4edd;
+        }
+
+        button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .button-error {
+            background-color: var(--error-color);
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .image-card {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+            position: relative;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .image-info {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .image-type {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        pre {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .config-box {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.hide {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #ffc107;
+            color: var(--text-color);
+        }
+
+        .alert strong {
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .image-preview {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Glow-Ups Admin</h1>
+        <div>
+            <button id="theme-toggle">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="card">
+            <h2>Bilder hochladen</h2>
+            <p>Lade alle deine Glow-Up Bilder hoch (Vor- und Nach-Bilder). Die Dateien sollten dem Format <code>name..v_alter.png</code> (Vorher) und <code>name..n_alter.png</code> (Nachher) folgen.</p>
+            
+            <div class="upload-area" id="upload-area">
+                <p>Klicke hier oder ziehe Dateien hierher, um Bilder hochzuladen</p>
+                <input type="file" id="file-input" multiple accept="image/*">
+            </div>
+            
+            <div>
+                <button id="generate-btn" disabled>Konfiguration generieren</button>
+                <button id="clear-btn" class="button-error" disabled>Alles löschen</button>
+            </div>
+        </div>
+
+        <div class="card" id="image-preview-container" style="display: none;">
+            <h2>Bildvorschau</h2>
+            <p>Erkannte Bilder (<span id="image-count">0</span>):</p>
+            <div class="image-preview" id="image-preview"></div>
+        </div>
+
+        <div class="card" id="config-container" style="display: none;">
+            <h2>Konfiguration</h2>
+            <p>Kopiere diese Konfiguration und füge sie in die <code>glowups.json</code> Datei ein oder lade sie herunter:</p>
+            
+            <div class="alert alert-warning">
+                <strong>Wichtig:</strong> Du musst die Bilddateien manuell in den "GlowUp"-Ordner kopieren, bevor die Konfiguration funktioniert!
+            </div>
+            
+            <div class="config-box">
+                <pre id="config-output"></pre>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <button id="copy-btn">In Zwischenablage kopieren</button>
+                <button id="download-btn">Als JSON herunterladen</button>
+                <button id="download-js-btn">Als JavaScript herunterladen</button>
+                <button id="download-files-btn" class="button-secondary">Dateien herunterladen (ZIP)</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Glow-Ups Admin Tool</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM-Elemente
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const imageCount = document.getElementById('image-count');
+            const configContainer = document.getElementById('config-container');
+            const configOutput = document.getElementById('config-output');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const downloadJsBtn = document.getElementById('download-js-btn');
+            const downloadFilesBtn = document.getElementById('download-files-btn');
+            const themeToggleBtn = document.getElementById('theme-toggle');
+
+            // Speicher für hochgeladene Bilder
+            let uploadedImages = [];
+
+            // Bilder pro Person
+            let personImages = {};
+
+            // Event-Listener für Upload-Area
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // Drag & Drop Events
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(128, 128, 128, 0.2)';
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.backgroundColor = '';
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = '';
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+
+            // Event-Listener für File-Input
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    handleFiles(fileInput.files);
+                }
+            });
+
+            // Dateinamen parsen
+            function parseFileName(fileName) {
+                const regex = /^(.+)\.\.([vn])(?:_(\d+))?\.([a-zA-Z]+)$/;
+                const match = fileName.match(regex);
+                
+                if (match) {
+                    return {
+                        name: match[1],
+                        type: match[2] === 'v' ? 'before' : 'after',
+                        age: match[3] ? parseInt(match[3]) : null,
+                        extension: match[4]
+                    };
+                }
+                
+                return null;
+            }
+
+            // Dateien verarbeiten
+            function handleFiles(files) {
+                for (const file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const fileInfo = parseFileName(file.name);
+                        
+                        if (fileInfo) {
+                            const imageType = fileInfo.type;
+                            const personName = fileInfo.name;
+                            const age = fileInfo.age;
+                            
+                            // Füge Bild zum Array hinzu
+                            uploadedImages.push({
+                                file,
+                                name: personName,
+                                type: imageType,
+                                age: age
+                            });
+                            
+                            // Gruppiere Bilder nach Person
+                            if (!personImages[personName]) {
+                                personImages[personName] = {};
+                            }
+                            personImages[personName][imageType] = {
+                                file,
+                                age: age
+                            };
+                            
+                            // Erstelle Bildvorschau
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                createImagePreview(e.target.result, file.name, imageType, personName, age);
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            showNotification(`Datei "${file.name}" hat nicht das richtige Format und wurde übersprungen.`);
+                        }
+                    }
+                }
+                
+                updateUI();
+            }
+
+            // Bildvorschau erstellen
+            function createImagePreview(dataUrl, fileName, imageType, personName, age) {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.alt = fileName;
+                
+                const info = document.createElement('div');
+                info.className = 'image-info';
+                info.textContent = `${personName}${age ? ` (${age})` : ''}`;
+                
+                const typeLabel = document.createElement('div');
+                typeLabel.className = 'image-type';
+                typeLabel.textContent = imageType === 'before' ? 'Vorher' : 'Nachher';
+                
+                card.appendChild(img);
+                card.appendChild(info);
+                card.appendChild(typeLabel);
+                
+                imagePreview.appendChild(card);
+            }
+
+            // UI aktualisieren
+            function updateUI() {
+                // Anzahl der Bilder aktualisieren
+                imageCount.textContent = uploadedImages.length;
+                
+                // Nur anzeigen, wenn Bilder vorhanden sind
+                if (uploadedImages.length > 0) {
+                    imagePreviewContainer.style.display = 'block';
+                    generateBtn.disabled = false;
+                    clearBtn.disabled = false;
+                } else {
+                    imagePreviewContainer.style.display = 'none';
+                    configContainer.style.display = 'none';
+                    generateBtn.disabled = true;
+                    clearBtn.disabled = true;
+                }
+            }
+
+            // Konfiguration generieren
+            generateBtn.addEventListener('click', () => {
+                generateConfig();
+            });
+
+            // Alles löschen
+            clearBtn.addEventListener('click', () => {
+                uploadedImages = [];
+                personImages = {};
+                imagePreview.innerHTML = '';
+                configOutput.textContent = '';
+                configContainer.style.display = 'none';
+                updateUI();
+                showNotification('Alle Bilder wurden gelöscht.');
+            });
+
+            // Konfiguration generieren
+            function generateConfig() {
+                const glowUps = [];
+                let id = 1;
+                
+                // Durchlaufe alle Personen
+                for (const personName in personImages) {
+                    const person = personImages[personName];
+                    
+                    // Nur hinzufügen, wenn sowohl Vorher- als auch Nachher-Bild vorhanden
+                    if (person.before && person.after) {
+                        glowUps.push({
+                            id: id++,
+                            name: personName,
+                            age: person.before.age || person.after.age,
+                            beforeImage: `GlowUp/${personName}..v${person.before.age ? `_${person.before.age}` : ''}.${getFileExtension(person.before.file.name)}`,
+                            afterImage: `GlowUp/${personName}..n${person.after.age ? `_${person.after.age}` : ''}.${getFileExtension(person.after.file.name)}`
+                        });
+                    }
+                }
+                
+                // Ausgabe formatieren
+                const jsonConfig = JSON.stringify(glowUps, null, 2);
+                configOutput.textContent = jsonConfig;
+                
+                // Zeige Konfigurationsfenster
+                configContainer.style.display = 'block';
+                
+                // Scrolle zum Konfigurationsfenster
+                configContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Dateiendung ermitteln
+            function getFileExtension(filename) {
+                return filename.split('.').pop();
+            }
+
+            // In Zwischenablage kopieren
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(configOutput.textContent)
+                    .then(() => {
+                        showNotification('Konfiguration wurde in die Zwischenablage kopiert!');
+                    })
+                    .catch(err => {
+                        showNotification('Fehler beim Kopieren: ' + err);
+                    });
+            });
+
+            // Als JSON herunterladen
+            downloadBtn.addEventListener('click', () => {
+                downloadFile('glowups.json', configOutput.textContent, 'application/json');
+                showNotification('Konfiguration wurde als JSON heruntergeladen!');
+            });
+
+            // Als JavaScript herunterladen
+            downloadJsBtn.addEventListener('click', () => {
+                // Erstelle JavaScript-Array mit allen bekannten Dateien
+                const fileList = uploadedImages.map(img => {
+                    const ext = getFileExtension(img.file.name);
+                    if (img.type === 'before') {
+                        return `'${img.name}..v${img.age ? `_${img.age}` : ''}.${ext}'`;
+                    } else {
+                        return `'${img.name}..n${img.age ? `_${img.age}` : ''}.${ext}'`;
+                    }
+                });
+                
+                const jsContent = `// Automatisch generierte Dateiliste
+const allFiles = [
+    ${fileList.join(',\n    ')}
+];`;
+                
+                downloadFile('image-files.js', jsContent, 'text/javascript');
+                showNotification('Dateiliste wurde als JavaScript heruntergeladen!');
+            });
+
+            // Dateien als ZIP herunterladen
+            downloadFilesBtn.addEventListener('click', async () => {
+                try {
+                    // Prüfe, ob die JSZip-Bibliothek bereits geladen ist
+                    if (typeof JSZip === 'undefined') {
+                        // Lade JSZip dynamisch
+                        await loadJSZip();
+                    }
+                    
+                    const zip = new JSZip();
+                    const glowUpFolder = zip.folder("GlowUp");
+                    
+                    // Füge jedes Bild zum ZIP hinzu
+                    const imagePromises = [];
+                    
+                    for (const image of uploadedImages) {
+                        const imgName = image.file.name;
+                        const promise = new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // Base64-String bekommen und den Header entfernen
+                                const base64 = e.target.result.split(',')[1];
+                                glowUpFolder.file(imgName, base64, {base64: true});
+                                resolve();
+                            };
+                            reader.readAsDataURL(image.file);
+                        });
+                        
+                        imagePromises.push(promise);
+                    }
+                    
+                    // Warte, bis alle Bilder zum ZIP hinzugefügt wurden
+                    await Promise.all(imagePromises);
+                    
+                    // Füge die glowups.json hinzu
+                    const glowUps = [];
+                    let id = 1;
+                    
+                    for (const personName in personImages) {
+                        const person = personImages[personName];
+                        
+                        if (person.before && person.after) {
+                            glowUps.push({
+                                id: id++,
+                                name: personName,
+                                age: person.before.age || person.after.age,
+                                beforeImage: `GlowUp/${personName}..v${person.before.age ? `_${person.before.age}` : ''}.${getFileExtension(person.before.file.name)}`,
+                                afterImage: `GlowUp/${personName}..n${person.after.age ? `_${person.after.age}` : ''}.${getFileExtension(person.after.file.name)}`
+                            });
+                        }
+                    }
+                    
+                    const jsonConfig = JSON.stringify(glowUps, null, 2);
+                    zip.file("glowups.json", jsonConfig);
+                    
+                    // Generiere ZIP und biete es zum Download an
+                    const content = await zip.generateAsync({type: "blob"});
+                    saveAs(content, "glow-up-bilder.zip");
+                    
+                    showNotification('Bilder und Konfiguration wurden als ZIP heruntergeladen!');
+                } catch (error) {
+                    console.error('Fehler beim Erstellen des ZIP-Archivs:', error);
+                    showNotification('Fehler beim Erstellen des ZIP-Archivs. Versuche, die Bilder einzeln herunterzuladen.');
+                }
+            });
+
+            // Lade die JSZip und FileSaver Bibliotheken
+            async function loadJSZip() {
+                return new Promise((resolve, reject) => {
+                    // JSZip laden
+                    const jsZipScript = document.createElement('script');
+                    jsZipScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                    jsZipScript.onload = () => {
+                        // FileSaver nach JSZip laden
+                        const fileSaverScript = document.createElement('script');
+                        fileSaverScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
+                        fileSaverScript.onload = resolve;
+                        fileSaverScript.onerror = reject;
+                        document.body.appendChild(fileSaverScript);
+                    };
+                    jsZipScript.onerror = reject;
+                    document.body.appendChild(jsZipScript);
+                });
+            }
+
+            // Datei herunterladen
+            function downloadFile(filename, content, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+
+            // Theme Toggle
+            themeToggleBtn.addEventListener('click', () => {
+                const html = document.documentElement;
+                
+                if (html.classList.contains('light-mode')) {
+                    html.classList.remove('light-mode');
+                    themeToggleBtn.textContent = '🌙';
+                } else {
+                    html.classList.add('light-mode');
+                    themeToggleBtn.textContent = '☀️';
+                }
+            });
+
+            // Benachrichtigung anzeigen
+            function showNotification(message) {
+                // Alte Benachrichtigungen entfernen
+                const oldNotifications = document.querySelectorAll('.notification');
+                oldNotifications.forEach(n => n.remove());
+                
+                // Neue Benachrichtigung erstellen
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Nach 3 Sekunden ausblenden
+                setTimeout(() => {
+                    notification.classList.add('hide');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html> 

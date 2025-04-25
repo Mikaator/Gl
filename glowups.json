@@ -8,16 +8,16 @@
   },
   {
     "id": 2,
-    "name": "Yuh",
-    "age": 19,
-    "beforeImage": "GlowUp/yuh..v_19.png",
-    "afterImage": "GlowUp/yuh..n_19.png"
-  },
-  {
-    "id": 3,
     "name": "Medschen",
     "age": 20,
     "beforeImage": "GlowUp/medschen..v_20.png",
     "afterImage": "GlowUp/medschen..n_20.png"
+  },
+  {
+    "id": 3,
+    "name": "Yuh",
+    "age": 19,
+    "beforeImage": "GlowUp/yuh..v_19.png",
+    "afterImage": "GlowUp/yuh..n_19.png"
   }
 ] 

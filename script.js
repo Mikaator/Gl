@@ -87,46 +87,86 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lade die Glow-Up-Daten aus der JSON-Datei
     async function loadGlowUps() {
         try {
-            // Scannen des GlowUp-Ordners
-            const glowUpsFromFolder = await scanGlowUpFolder();
+            console.log("Lade Glow-Ups aus der glowups.json...");
             
-            // Leere die aktuelle Liste
-            glowUps = [];
+            // Versuche zuerst, die Daten aus der JSON-Datei zu laden
+            const response = await fetch('glowups.json');
             
-            if (glowUpsFromFolder && glowUpsFromFolder.length > 0) {
-                console.log(`${glowUpsFromFolder.length} Glow-Ups im Ordner gefunden`);
-                glowUps = glowUpsFromFolder;
+            if (response.ok) {
+                const jsonData = await response.json();
+                console.log(`${jsonData.length} Glow-Ups aus der JSON-Datei geladen`);
                 
-                // Speichere die gefundenen Glow-Ups im localStorage für schnelleres Laden beim nächsten Mal
-                localStorage.setItem('cachedGlowUps', JSON.stringify(glowUpsFromFolder));
-                localStorage.setItem('glowUpsCacheTime', Date.now().toString());
-            } else {
-                console.log("Keine Bilder im Ordner gefunden, versuche Cache zu laden...");
+                // Überprüfe, ob die Bilder existieren
+                const validGlowUps = [];
                 
-                // Versuche Bilder aus dem Cache zu laden
-                const cachedGlowUps = localStorage.getItem('cachedGlowUps');
+                for (const glowUp of jsonData) {
+                    const beforeExists = await checkImageExists(glowUp.beforeImage);
+                    const afterExists = await checkImageExists(glowUp.afterImage);
+                    
+                    if (beforeExists && afterExists) {
+                        validGlowUps.push(glowUp);
+                    } else {
+                        console.warn(`Bilder für ${glowUp.name} existieren nicht: beforeExists=${beforeExists}, afterExists=${afterExists}`);
+                    }
+                }
                 
-                if (cachedGlowUps) {
-                    console.log('Lade Bilder aus dem Cache...');
-                    glowUps = JSON.parse(cachedGlowUps);
+                if (validGlowUps.length > 0) {
+                    glowUps = validGlowUps;
+                    console.log(`${glowUps.length} gültige Glow-Ups gefunden`);
+                    updateProgress();
+                    displayCurrentGlowUp();
+                    return;
                 } else {
-                    // Wenn keine Bilder gefunden wurden, zeige Sample-Bilder
-                    console.log('Keine Bilder im Cache, lade Beispieldaten...');
-                    glowUps = getSampleGlowUps();
+                    console.warn("Keine gültigen Bilder in der JSON-Datei gefunden!");
+                }
+            } else {
+                console.warn("glowups.json konnte nicht geladen werden:", response.status, response.statusText);
+            }
+            
+            // Als Fallback: Versuche den Cache zu laden
+            const cachedGlowUps = localStorage.getItem('cachedGlowUps');
+            
+            if (cachedGlowUps) {
+                console.log('Lade Bilder aus dem Cache...');
+                glowUps = JSON.parse(cachedGlowUps);
+                
+                // Prüfe, ob die Bilder im Cache noch existieren
+                const validCachedGlowUps = [];
+                
+                for (const glowUp of glowUps) {
+                    const beforeExists = await checkImageExists(glowUp.beforeImage);
+                    const afterExists = await checkImageExists(glowUp.afterImage);
+                    
+                    if (beforeExists && afterExists) {
+                        validCachedGlowUps.push(glowUp);
+                    }
+                }
+                
+                if (validCachedGlowUps.length > 0) {
+                    glowUps = validCachedGlowUps;
+                    console.log(`${glowUps.length} gültige Glow-Ups aus dem Cache geladen`);
+                    updateProgress();
+                    displayCurrentGlowUp();
+                    return;
+                } else {
+                    console.warn("Keine gültigen Bilder im Cache gefunden!");
                 }
             }
             
+            // Als letzten Fallback: Beispieldaten anzeigen oder den Ordner scannen
+            console.log("Lade Beispieldaten als letzten Fallback...");
+            glowUps = getSampleGlowUps();
+            
+            // Überprüfe, ob die Beispieldaten existieren
             if (glowUps.length > 0) {
-                // Log die geladenen Glow-Ups für Debugging
-                console.log("Geladene Glow-Ups:", glowUps.map(g => g.name));
                 updateProgress();
                 displayCurrentGlowUp();
             } else {
-                alert('Keine Glow-Ups gefunden! Bitte füge Bilder zum GlowUp-Ordner hinzu.');
+                alert('Keine Glow-Ups gefunden! Bitte füge Bilder zum GlowUp-Ordner hinzu oder verwende die Admin-Seite, um eine glowups.json zu erstellen.');
             }
         } catch (error) {
             console.error('Fehler beim Laden der Glow-Ups:', error);
-            alert('Fehler beim Laden der Daten. Bitte später erneut versuchen.');
+            alert('Fehler beim Laden der Daten. Bitte später erneut versuchen oder die Admin-Seite nutzen.');
         }
     }
 
@@ -300,6 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Prüft, ob ein Bild existiert, indem es versucht wird zu laden
     async function checkImageExists(url) {
+        // Prüfe für Textdateien
+        if (url.endsWith('.txt')) {
+            return true; // Akzeptiere Textdateien als Platzhalter
+        }
+        
         return new Promise(resolve => {
             const img = new Image();
             img.onload = () => resolve(true);
@@ -356,7 +401,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Erstelle das Vorher-Bild (standardmäßig mit Blur-Effekt)
         const imageElement = document.createElement('img');
-        imageElement.src = glowUp.beforeImage;
+        
+        // Prüfe, ob es sich um eine Textdatei handelt
+        if (glowUp.beforeImage.endsWith('.txt')) {
+            // Für Textdateien verwenden wir ein Platzhalter-Styling
+            imageElement.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23cccccc"/><text x="50%" y="50%" font-family="Arial" font-size="24" text-anchor="middle" fill="%23666666">Platzhalter: Kein Vorher-Bild</text></svg>';
+        } else {
+            // Normales Bild
+            imageElement.src = glowUp.beforeImage;
+        }
+        
         imageElement.alt = `${glowUp.name} vorher`;
         imageElement.classList.add('glowup-image', 'blurred', 'scale-in');
         imageElement.dataset.state = 'before-blurred';
@@ -396,38 +450,53 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageElement = event.target;
         const currentState = imageElement.dataset.state;
         
+        // Bei Textdateien als Platzhalter überspringen wir das Vorher-Bild
+        const isPlaceholder = glowUp.beforeImage.endsWith('.txt');
+        
         if (currentState === 'before-blurred') {
             // Entferne den Blur-Effekt mit Animation
             imageElement.classList.add('scale-in');
             imageElement.classList.remove('blurred');
             imageElement.dataset.state = 'before-clear';
             
-            setTimeout(() => {
-                imageElement.classList.remove('scale-in');
-            }, 600);
+            // Bei Platzhalter direkt zum Nachher-Bild wechseln
+            if (isPlaceholder) {
+                setTimeout(() => {
+                    showAfterImage(imageElement, glowUp);
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    imageElement.classList.remove('scale-in');
+                }, 600);
+            }
         } else if (currentState === 'before-clear') {
             // Wechsle zum Nachher-Bild mit Animation
-            imageElement.style.opacity = 0;
-            imageElement.style.transform = 'rotateY(90deg)';
-            
-            setTimeout(() => {
-                imageElement.src = glowUp.afterImage;
-                imageElement.alt = `${glowUp.name} nachher`;
-                imageElement.dataset.state = 'after';
-                
-                // Füge eine kurze Verzögerung hinzu, bevor das Bild wieder angezeigt wird
-                setTimeout(() => {
-                    imageElement.style.opacity = 1;
-                    imageElement.style.transform = 'rotateY(0deg)';
-                    imageElement.classList.add('pulse');
-                    
-                    // Entferne die Pulse-Animation nach einer Weile
-                    setTimeout(() => {
-                        imageElement.classList.remove('pulse');
-                    }, 2000);
-                }, 100);
-            }, 300);
+            showAfterImage(imageElement, glowUp);
         }
+    }
+
+    // Hilfsfunktion zum Anzeigen des Nachher-Bildes
+    function showAfterImage(imageElement, glowUp) {
+        imageElement.style.opacity = 0;
+        imageElement.style.transform = 'rotateY(90deg)';
+        
+        setTimeout(() => {
+            imageElement.src = glowUp.afterImage;
+            imageElement.alt = `${glowUp.name} nachher`;
+            imageElement.dataset.state = 'after';
+            
+            // Füge eine kurze Verzögerung hinzu, bevor das Bild wieder angezeigt wird
+            setTimeout(() => {
+                imageElement.style.opacity = 1;
+                imageElement.style.transform = 'rotateY(0deg)';
+                imageElement.classList.add('pulse');
+                
+                // Entferne die Pulse-Animation nach einer Weile
+                setTimeout(() => {
+                    imageElement.classList.remove('pulse');
+                }, 2000);
+            }, 100);
+        }, 300);
     }
 
     // Event-Listener für die Bewertungsbuttons
@@ -636,10 +705,55 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = 0;
         
         // Neuladen starten
-        await loadGlowUps();
-        
-        // Einen Toast anzeigen, wie viele Bilder geladen wurden
-        showNotification(`${glowUps.length} Bilder gefunden und geladen!`);
+        try {
+            // Direkt von glowups.json laden ohne Scan
+            console.log("Lade Glow-Ups neu aus der glowups.json...");
+            
+            const response = await fetch('glowups.json?nocache=' + Date.now());
+            
+            if (response.ok) {
+                const jsonData = await response.json();
+                console.log(`${jsonData.length} Glow-Ups aus der JSON-Datei geladen`);
+                
+                // Überprüfe, ob die Bilder existieren
+                const validGlowUps = [];
+                
+                for (const glowUp of jsonData) {
+                    const beforeExists = await checkImageExists(glowUp.beforeImage);
+                    const afterExists = await checkImageExists(glowUp.afterImage);
+                    
+                    if (beforeExists && afterExists) {
+                        validGlowUps.push(glowUp);
+                    } else {
+                        console.warn(`Bilder für ${glowUp.name} existieren nicht: beforeExists=${beforeExists}, afterExists=${afterExists}`);
+                    }
+                }
+                
+                if (validGlowUps.length > 0) {
+                    glowUps = validGlowUps;
+                    console.log(`${glowUps.length} gültige Glow-Ups gefunden`);
+                    updateProgress();
+                    displayCurrentGlowUp();
+                    showNotification(`${glowUps.length} Bilder erfolgreich neu geladen!`);
+                    return;
+                } else {
+                    console.warn("Keine gültigen Bilder in der JSON-Datei gefunden!");
+                    showNotification("Keine gültigen Bilder gefunden. Überprüfe die Dateistruktur.");
+                }
+            } else {
+                console.warn("glowups.json konnte nicht geladen werden:", response.status, response.statusText);
+                showNotification("Fehler beim Laden der Konfigurationsdatei.");
+            }
+            
+            // Fallback zu Beispieldaten
+            glowUps = getSampleGlowUps();
+            updateProgress();
+            displayCurrentGlowUp();
+            showNotification(`${glowUps.length} Beispiel-Bilder geladen, da keine Konfiguration gefunden wurde.`);
+        } catch (error) {
+            console.error('Fehler beim Neuladen der Glow-Ups:', error);
+            showNotification("Fehler beim Laden. Bitte Admin-Seite verwenden.");
+        }
     }
 
     // Zeigt eine Benachrichtigung an

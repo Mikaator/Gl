@@ -640,4 +640,25 @@ footer {
     to {
         opacity: 0;
     }
+}
+
+/* Füge Styling für den Admin-Link hinzu */
+.admin-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+    color: white;
+    font-size: 1.2rem;
+    text-decoration: none;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.admin-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
 } 
