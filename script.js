@@ -29,36 +29,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Lade die Glow-Up-Daten aus der JSON-Datei
+    // Finde automatisch Bilder im GlowUp-Ordner und lade sie
     async function loadGlowUps() {
         try {
-            const response = await fetch('glowups.json');
-            if (!response.ok) {
-                throw new Error('Fehler beim Laden der Daten');
-            }
+            // Scannen des GlowUp-Ordners
+            const glowUpsFromFolder = await scanGlowUpFolder();
             
-            glowUps = await response.json();
-            
-            if (glowUps.length > 0) {
+            if (glowUpsFromFolder.length > 0) {
+                glowUps = glowUpsFromFolder;
                 updateProgress();
                 displayCurrentGlowUp();
             } else {
-                alert('Keine Glow-Ups gefunden!');
+                // Wenn keine Bilder gefunden wurden, versuche die JSON zu laden als Fallback
+                console.log('Keine Bilder im Ordner gefunden, versuche JSON zu laden...');
+                try {
+                    const response = await fetch('glowups.json');
+                    if (!response.ok) {
+                        throw new Error('Fehler beim Laden der JSON-Daten');
+                    }
+                    
+                    glowUps = await response.json();
+                    
+                    if (glowUps.length > 0) {
+                        updateProgress();
+                        displayCurrentGlowUp();
+                    } else {
+                        throw new Error('Keine Glow-Ups in der JSON gefunden');
+                    }
+                } catch (jsonError) {
+                    console.error('Fehler beim Laden der JSON:', jsonError);
+                    glowUps = getSampleGlowUps();
+                    
+                    if (glowUps.length > 0) {
+                        updateProgress();
+                        displayCurrentGlowUp();
+                    } else {
+                        alert('Keine Glow-Ups gefunden! Bitte füge Bilder zum GlowUp-Ordner hinzu.');
+                    }
+                }
             }
         } catch (error) {
             console.error('Fehler beim Laden der Glow-Ups:', error);
+            alert('Fehler beim Laden der Daten. Bitte später erneut versuchen.');
+        }
+    }
+
+    // Scannt den GlowUp-Ordner nach Bildern
+    async function scanGlowUpFolder() {
+        // Diese Funktion simuliert das Scannen des Ordners im Frontend
+        // In einer echten Server-Umgebung würde dies durch einen API-Aufruf erfolgen
+        
+        // Liste der bekannten Bildendungen
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        // Speichert gefundene Vorher-Bilder
+        const beforeImages = [];
+        // Speichert gefundene Nachher-Bilder
+        const afterImages = [];
+        
+        // In einer echten Anwendung würde hier ein API-Aufruf stattfinden
+        // Da wir nur im Frontend arbeiten, versuchen wir Bilder zu finden, indem wir
+        // direkt die Dateien prüfen
+        
+        // Teste alle Dateien im GlowUp-Ordner, die wir kennen
+        const filesToCheck = [
+            // Dynamisch gefundene Dateien aus deinem Ordner
+            'wohoioi..v.png', 'wohoioi..n.png',
+            'yuh..v_19.png', 'yuh..n_19.png'
+        ];
+        
+        // Prüfe jede Datei
+        for (const fileName of filesToCheck) {
+            const fileInfo = parseFileName(fileName);
             
-            // Fallback: Verwende Beispieldaten, wenn die JSON-Datei nicht geladen werden kann
-            console.log('Verwende Beispieldaten als Fallback...');
-            glowUps = getSampleGlowUps();
-            
-            if (glowUps.length > 0) {
-                updateProgress();
-                displayCurrentGlowUp();
-            } else {
-                alert('Fehler beim Laden der Daten. Bitte später erneut versuchen.');
+            if (fileInfo && imageExtensions.includes(fileInfo.extension.toLowerCase())) {
+                const imagePath = `GlowUp/${fileName}`;
+                
+                // Prüfe, ob das Bild tatsächlich existiert
+                const imageExists = await checkImageExists(imagePath);
+                
+                if (imageExists) {
+                    if (fileInfo.type === 'before') {
+                        beforeImages.push({
+                            name: fileInfo.name,
+                            age: fileInfo.age,
+                            path: imagePath
+                        });
+                    } else if (fileInfo.type === 'after') {
+                        afterImages.push({
+                            name: fileInfo.name,
+                            age: fileInfo.age,
+                            path: imagePath
+                        });
+                    }
+                }
             }
         }
+        
+        // Jetzt kombinieren wir die Vor- und Nachher-Bilder
+        const glowUpsData = [];
+        let id = 1;
+        
+        // Durchsuche alle Vorher-Bilder
+        for (const beforeImage of beforeImages) {
+            // Finde das passende Nachher-Bild
+            const matchingAfterImage = afterImages.find(img => img.name === beforeImage.name);
+            
+            if (matchingAfterImage) {
+                glowUpsData.push({
+                    id: id++,
+                    name: beforeImage.name,
+                    age: beforeImage.age || matchingAfterImage.age,
+                    beforeImage: beforeImage.path,
+                    afterImage: matchingAfterImage.path
+                });
+            }
+        }
+        
+        return glowUpsData;
+    }
+    
+    // Prüft, ob ein Bild existiert, indem es versucht wird zu laden
+    async function checkImageExists(url) {
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+        });
     }
 
     // Fallback: Beispieldaten für die Glow-Ups
@@ -66,24 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return [
             {
                 id: 1,
-                name: 'Mia',
-                age: 17,
-                beforeImage: 'GlowUp/mia..v_17.jpg',
-                afterImage: 'GlowUp/mia..n_17.jpg'
+                name: 'Wohoioi',
+                age: null,
+                beforeImage: 'GlowUp/wohoioi..v.png',
+                afterImage: 'GlowUp/wohoioi..n.png'
             },
             {
                 id: 2,
-                name: 'Leon',
-                age: 22,
-                beforeImage: 'GlowUp/leon..v_22.jpg',
-                afterImage: 'GlowUp/leon..n_22.jpg'
-            },
-            {
-                id: 3,
-                name: 'Sophia',
+                name: 'Yuh',
                 age: 19,
-                beforeImage: 'GlowUp/sophia..v_19.jpg',
-                afterImage: 'GlowUp/sophia..n_19.jpg'
+                beforeImage: 'GlowUp/yuh..v_19.png',
+                afterImage: 'GlowUp/yuh..n_19.png'
             }
         ];
     }
@@ -124,9 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Erstelle das Info-Element mit Name und Alter
         const infoElement = document.createElement('div');
         infoElement.classList.add('person-info');
+        
+        // Nur Alter anzeigen, wenn es vorhanden ist
+        const ageText = glowUp.age ? `<p>${glowUp.age} Jahre</p>` : '';
+        
         infoElement.innerHTML = `
             <h2>${glowUp.name}</h2>
-            <p>${glowUp.age} Jahre</p>
+            ${ageText}
         `;
         
         // Füge die Elemente zum Container hinzu
@@ -306,6 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Erstelle das HTML für ein Ergebnis-Element
     function createResultItemHTML(glowUp) {
+        // Nur Alter anzeigen, wenn es vorhanden ist
+        const ageText = glowUp.age ? `<p>${glowUp.age} Jahre</p>` : '';
+        
         return `
             <div class="result-item slide-in">
                 <div class="result-images">
@@ -314,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="result-info">
                     <h4>${glowUp.name}</h4>
-                    <p>${glowUp.age} Jahre</p>
+                    ${ageText}
                 </div>
             </div>
         `;
