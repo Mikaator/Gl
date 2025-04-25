@@ -16,11 +16,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const goldenBuzzerBtn = document.getElementById('goldenbuzzer-btn');
     const restartBtn = document.getElementById('restart-btn');
     const themeToggleBtn = document.getElementById('theme-toggle');
+    const reloadBtn = document.getElementById('reload-btn');
 
     // Ergebnis-Container
     const likeResults = document.getElementById('like-results');
     const superlikeResults = document.getElementById('superlike-results');
     const goldenBuzzerResults = document.getElementById('golden-buzzer-results');
+
+    // Event-Listener für den Reload-Button
+    function setupReloadButton() {
+        reloadBtn.addEventListener('click', () => {
+            // Zeige Ladeanimation
+            reloadBtn.classList.add('spin-animation');
+            
+            // Neuladen der Bilder
+            reloadGlowUps().then(() => {
+                // Entferne Ladeanimation nach dem Laden
+                setTimeout(() => {
+                    reloadBtn.classList.remove('spin-animation');
+                }, 1000);
+            });
+        });
+    }
 
     // Dark Mode
     function setupThemeToggle() {
@@ -67,44 +84,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Finde automatisch Bilder im GlowUp-Ordner und lade sie
+    // Lade die Glow-Up-Daten aus der JSON-Datei
     async function loadGlowUps() {
         try {
             // Scannen des GlowUp-Ordners
             const glowUpsFromFolder = await scanGlowUpFolder();
             
-            if (glowUpsFromFolder.length > 0) {
+            // Leere die aktuelle Liste
+            glowUps = [];
+            
+            if (glowUpsFromFolder && glowUpsFromFolder.length > 0) {
+                console.log(`${glowUpsFromFolder.length} Glow-Ups im Ordner gefunden`);
                 glowUps = glowUpsFromFolder;
+                
+                // Speichere die gefundenen Glow-Ups im localStorage für schnelleres Laden beim nächsten Mal
+                localStorage.setItem('cachedGlowUps', JSON.stringify(glowUpsFromFolder));
+                localStorage.setItem('glowUpsCacheTime', Date.now().toString());
+            } else {
+                console.log("Keine Bilder im Ordner gefunden, versuche Cache zu laden...");
+                
+                // Versuche Bilder aus dem Cache zu laden
+                const cachedGlowUps = localStorage.getItem('cachedGlowUps');
+                
+                if (cachedGlowUps) {
+                    console.log('Lade Bilder aus dem Cache...');
+                    glowUps = JSON.parse(cachedGlowUps);
+                } else {
+                    // Wenn keine Bilder gefunden wurden, zeige Sample-Bilder
+                    console.log('Keine Bilder im Cache, lade Beispieldaten...');
+                    glowUps = getSampleGlowUps();
+                }
+            }
+            
+            if (glowUps.length > 0) {
+                // Log die geladenen Glow-Ups für Debugging
+                console.log("Geladene Glow-Ups:", glowUps.map(g => g.name));
                 updateProgress();
                 displayCurrentGlowUp();
             } else {
-                // Wenn keine Bilder gefunden wurden, versuche die JSON zu laden als Fallback
-                console.log('Keine Bilder im Ordner gefunden, versuche JSON zu laden...');
-                try {
-                    const response = await fetch('glowups.json');
-                    if (!response.ok) {
-                        throw new Error('Fehler beim Laden der JSON-Daten');
-                    }
-                    
-                    glowUps = await response.json();
-                    
-                    if (glowUps.length > 0) {
-                        updateProgress();
-                        displayCurrentGlowUp();
-                    } else {
-                        throw new Error('Keine Glow-Ups in der JSON gefunden');
-                    }
-                } catch (jsonError) {
-                    console.error('Fehler beim Laden der JSON:', jsonError);
-                    glowUps = getSampleGlowUps();
-                    
-                    if (glowUps.length > 0) {
-                        updateProgress();
-                        displayCurrentGlowUp();
-                    } else {
-                        alert('Keine Glow-Ups gefunden! Bitte füge Bilder zum GlowUp-Ordner hinzu.');
-                    }
-                }
+                alert('Keine Glow-Ups gefunden! Bitte füge Bilder zum GlowUp-Ordner hinzu.');
             }
         } catch (error) {
             console.error('Fehler beim Laden der Glow-Ups:', error);
@@ -112,79 +130,172 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Scannt den GlowUp-Ordner nach Bildern
+    // Scannt den GlowUp-Ordner nach Bildern mit umfassender automatischer Erkennung
     async function scanGlowUpFolder() {
-        // Diese Funktion simuliert das Scannen des Ordners im Frontend
-        // In einer echten Server-Umgebung würde dies durch einen API-Aufruf erfolgen
-        
-        // Liste der bekannten Bildendungen
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
-        // Speichert gefundene Vorher-Bilder
-        const beforeImages = [];
-        // Speichert gefundene Nachher-Bilder
-        const afterImages = [];
-        
-        // In einer echten Anwendung würde hier ein API-Aufruf stattfinden
-        // Da wir nur im Frontend arbeiten, versuchen wir Bilder zu finden, indem wir
-        // direkt die Dateien prüfen
-        
-        // Teste alle Dateien im GlowUp-Ordner, die wir kennen
-        const filesToCheck = [
-            // Dynamisch gefundene Dateien aus deinem Ordner
-            'wohoioi..v.png', 'wohoioi..n.png',
-            'yuh..v_19.png', 'yuh..n_19.png'
-        ];
-        
-        // Prüfe jede Datei
-        for (const fileName of filesToCheck) {
-            const fileInfo = parseFileName(fileName);
+        try {
+            console.log("Starte automatischen Scan nach Bildern im GlowUp-Ordner...");
             
-            if (fileInfo && imageExtensions.includes(fileInfo.extension.toLowerCase())) {
-                const imagePath = `GlowUp/${fileName}`;
-                
-                // Prüfe, ob das Bild tatsächlich existiert
-                const imageExists = await checkImageExists(imagePath);
-                
-                if (imageExists) {
-                    if (fileInfo.type === 'before') {
-                        beforeImages.push({
-                            name: fileInfo.name,
-                            age: fileInfo.age,
-                            path: imagePath
-                        });
-                    } else if (fileInfo.type === 'after') {
-                        afterImages.push({
-                            name: fileInfo.name,
-                            age: fileInfo.age,
-                            path: imagePath
-                        });
+            // Speichert gefundene Vorher-Bilder
+            const beforeImages = [];
+            // Speichert gefundene Nachher-Bilder
+            const afterImages = [];
+            
+            // Liste der bekannten Bildendungen
+            const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+            
+            // Erzeugt systematisch alle möglichen Dateinamen und prüft sie
+            const commonNames = [];
+            
+            // 1. Generische alphanumerische Versuche (a-z, 0-9, aa-zz)
+            // Einzelne Buchstaben
+            for (let charCode = 97; charCode <= 122; charCode++) {
+                commonNames.push(String.fromCharCode(charCode));
+            }
+            // Zahlen 1-50
+            for (let i = 1; i <= 50; i++) {
+                commonNames.push(i.toString());
+            }
+            // Zwei Buchstaben
+            for (let charCode1 = 97; charCode1 <= 122; charCode1++) {
+                for (let charCode2 = 97; charCode2 <= 122; charCode2++) {
+                    commonNames.push(String.fromCharCode(charCode1) + String.fromCharCode(charCode2));
+                }
+            }
+            
+            // 2. Häufige Vornamen hinzufügen
+            const nameSuggestions = [
+                'max', 'felix', 'tim', 'julian', 'leon', 'ben', 'lukas', 'finn', 'jonas', 'noah',
+                'luca', 'paul', 'david', 'luis', 'elias', 'philipp', 'nico', 'tom', 'simon', 'jan',
+                'sophie', 'maria', 'emma', 'hannah', 'mia', 'anna', 'lena', 'lea', 'emily', 'sofia',
+                'julia', 'clara', 'maja', 'laura', 'sarah', 'lisa', 'marie', 'alina', 'johanna', 'lilli',
+                'alex', 'chris', 'jamie', 'sam', 'robin', 'tony', 'kim', 'taylor', 'jordan', 'casey',
+                'wohoioi', 'yuh', 'glow', 'up', 'stream', 'viewer', 'fan', 'vip', 'mod', 'sub',
+                'user', 'member', 'subscriber', 'follower', 'friend', 'buddy', 'person', 'mensch',
+                'medschen', 'man', 'woman', 'boy', 'girl', 'dude', 'guy', 'lady', 'miss', 'mr', 'mrs',
+                'player', 'gamer', 'streamer', 'content', 'creator', 'artist', 'musician', 'dancer'
+            ];
+            
+            // Kombiniere alle Namen
+            commonNames.push(...nameSuggestions);
+            
+            console.log(`Prüfe ${commonNames.length * imageExtensions.length * 2} mögliche Dateivarianten...`);
+            
+            // Erstelle Batch-Gruppen, um die Anzahl gleichzeitiger Anfragen zu begrenzen
+            const batchSize = 50;
+            const batches = [];
+            const fileChecks = [];
+            
+            // Generiere alle möglichen Dateikombinationen
+            for (const name of commonNames) {
+                for (const ext of imageExtensions) {
+                    // Mit und ohne Altersangabe
+                    for (const ageValue of [null, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30]) {
+                        if (ageValue === null) {
+                            fileChecks.push(`${name}..v.${ext}`);
+                            fileChecks.push(`${name}..n.${ext}`);
+                        } else {
+                            fileChecks.push(`${name}..v_${ageValue}.${ext}`);
+                            fileChecks.push(`${name}..n_${ageValue}.${ext}`);
+                        }
                     }
                 }
             }
-        }
-        
-        // Jetzt kombinieren wir die Vor- und Nachher-Bilder
-        const glowUpsData = [];
-        let id = 1;
-        
-        // Durchsuche alle Vorher-Bilder
-        for (const beforeImage of beforeImages) {
-            // Finde das passende Nachher-Bild
-            const matchingAfterImage = afterImages.find(img => img.name === beforeImage.name);
             
-            if (matchingAfterImage) {
-                glowUpsData.push({
-                    id: id++,
-                    name: beforeImage.name,
-                    age: beforeImage.age || matchingAfterImage.age,
-                    beforeImage: beforeImage.path,
-                    afterImage: matchingAfterImage.path
-                });
+            // Teile die Dateien in Batches auf
+            for (let i = 0; i < fileChecks.length; i += batchSize) {
+                batches.push(fileChecks.slice(i, i + batchSize));
             }
+            
+            console.log(`Insgesamt ${fileChecks.length} mögliche Dateien in ${batches.length} Batches`);
+            
+            // Verarbeite die Batches nacheinander
+            let foundFiles = 0;
+            for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+                const batch = batches[batchIndex];
+                console.log(`Prüfe Batch ${batchIndex+1}/${batches.length}...`);
+                
+                const batchPromises = batch.map(fileName => {
+                    const fileInfo = parseFileName(fileName);
+                    if (!fileInfo) return Promise.resolve();
+                    
+                    const imagePath = `GlowUp/${fileName}`;
+                    return checkImageExists(imagePath).then(exists => {
+                        if (exists) {
+                            foundFiles++;
+                            console.log(`Gefunden: ${fileName}`);
+                            if (fileInfo.type === 'before') {
+                                beforeImages.push({
+                                    name: fileInfo.name,
+                                    age: fileInfo.age,
+                                    path: imagePath
+                                });
+                            } else if (fileInfo.type === 'after') {
+                                afterImages.push({
+                                    name: fileInfo.name,
+                                    age: fileInfo.age,
+                                    path: imagePath
+                                });
+                            }
+                        }
+                    });
+                });
+                
+                // Warte, bis der aktuelle Batch fertig ist
+                await Promise.all(batchPromises);
+            }
+            
+            console.log(`Scan abgeschlossen! ${foundFiles} Dateien gefunden.`);
+            console.log(`Gefunden: ${beforeImages.length} Vorher-Bilder und ${afterImages.length} Nachher-Bilder`);
+            
+            // Entferne Duplikate
+            const uniqueBeforeImages = [];
+            for (const img of beforeImages) {
+                if (!uniqueBeforeImages.some(existing => existing.name === img.name)) {
+                    uniqueBeforeImages.push(img);
+                }
+            }
+            
+            const uniqueAfterImages = [];
+            for (const img of afterImages) {
+                if (!uniqueAfterImages.some(existing => existing.name === img.name)) {
+                    uniqueAfterImages.push(img);
+                }
+            }
+            
+            console.log(`Nach Entfernung von Duplikaten: ${uniqueBeforeImages.length} Vorher-Bilder und ${uniqueAfterImages.length} Nachher-Bilder`);
+            
+            // Debug: Gib die gefundenen Bilder aus
+            console.log("Vorher-Bilder:", uniqueBeforeImages.map(img => img.name));
+            console.log("Nachher-Bilder:", uniqueAfterImages.map(img => img.name));
+            
+            // Jetzt kombinieren wir die Vor- und Nachher-Bilder
+            const glowUpsData = [];
+            let id = 1;
+            
+            // Durchsuche alle Vorher-Bilder
+            for (const beforeImage of uniqueBeforeImages) {
+                // Finde das passende Nachher-Bild
+                const matchingAfterImage = uniqueAfterImages.find(img => img.name === beforeImage.name);
+                
+                if (matchingAfterImage) {
+                    glowUpsData.push({
+                        id: id++,
+                        name: beforeImage.name,
+                        age: beforeImage.age || matchingAfterImage.age,
+                        beforeImage: beforeImage.path,
+                        afterImage: matchingAfterImage.path
+                    });
+                } else {
+                    console.log(`Kein passendes Nachher-Bild für ${beforeImage.name} gefunden!`);
+                }
+            }
+            
+            console.log(`Insgesamt ${glowUpsData.length} vollständige Glow-Ups gefunden.`);
+            return glowUpsData;
+        } catch (error) {
+            console.error('Fehler beim Scannen des Ordners:', error);
+            return [];
         }
-        
-        return glowUpsData;
     }
     
     // Prüft, ob ein Bild existiert, indem es versucht wird zu laden
@@ -515,6 +626,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    // Funktion zum erneuten Laden der Bilder
+    async function reloadGlowUps() {
+        // Cache löschen, um ein vollständiges Neuladen zu erzwingen
+        localStorage.removeItem('cachedGlowUps');
+        localStorage.removeItem('glowUpsCacheTime');
+        
+        // Anzeige zurücksetzen
+        currentIndex = 0;
+        
+        // Neuladen starten
+        await loadGlowUps();
+        
+        // Einen Toast anzeigen, wie viele Bilder geladen wurden
+        showNotification(`${glowUps.length} Bilder gefunden und geladen!`);
+    }
+
+    // Zeigt eine Benachrichtigung an
+    function showNotification(message) {
+        // Erstelle ein Benachrichtigungselement
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        
+        // Füge es zum Body hinzu
+        document.body.appendChild(notification);
+        
+        // Nach 3 Sekunden wieder entfernen
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 500);
+        }, 3000);
+    }
+
     // Initialisierung
     function init() {
         loadRatings();
@@ -523,6 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupRatingButtons();
         setupNavigationButtons();
         setupRestartButton();
+        setupReloadButton();
     }
 
     // Starte die Anwendung

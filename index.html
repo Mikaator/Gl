@@ -9,15 +9,28 @@
 <body>
     <header>
         <h1>Zuschauer Glow-Ups</h1>
-        <button id="theme-toggle" aria-label="Lightmode umschalten">
-            <span class="icon">☀️</span>
-        </button>
+        <div class="header-buttons">
+            <button id="reload-btn" aria-label="Bilder neu laden">
+                <span class="icon">🔄</span>
+            </button>
+            <button id="theme-toggle" aria-label="Lightmode umschalten">
+                <span class="icon">☀️</span>
+            </button>
+        </div>
     </header>
 
     <main>
         <div id="gallery-container">
-            <div id="current-glowup" class="glowup-container">
-                <!-- Hier wird das aktuelle Glow-Up dynamisch eingefügt -->
+            <div class="navigation">
+                <button id="prev-btn" disabled>Zurück</button>
+                <span id="progress">1 / 1</span>
+                <button id="next-btn">Weiter</button>
+            </div>
+            
+            <div class="main-content">
+                <div id="current-glowup" class="glowup-container">
+                    <!-- Hier wird das aktuelle Glow-Up dynamisch eingefügt -->
+                </div>
             </div>
             
             <div class="rating-container">
@@ -36,12 +49,6 @@
                         <span class="label">Golden Buzzer</span>
                     </button>
                 </div>
-            </div>
-            
-            <div class="navigation">
-                <button id="prev-btn" disabled>Zurück</button>
-                <span id="progress">1 / 1</span>
-                <button id="next-btn">Weiter</button>
             </div>
         </div>
 
