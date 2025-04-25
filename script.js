@@ -15,11 +15,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const superlikeBtn = document.getElementById('superlike-btn');
     const goldenBuzzerBtn = document.getElementById('goldenbuzzer-btn');
     const restartBtn = document.getElementById('restart-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle');
 
     // Ergebnis-Container
     const likeResults = document.getElementById('like-results');
     const superlikeResults = document.getElementById('superlike-results');
     const goldenBuzzerResults = document.getElementById('golden-buzzer-results');
+
+    // Dark Mode
+    function setupThemeToggle() {
+        const htmlElement = document.documentElement;
+        
+        // Überprüfe, ob ein Theme im localStorage gespeichert ist
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            htmlElement.classList.remove('dark-mode');
+            htmlElement.classList.add('light-mode');
+            themeToggleBtn.querySelector('.icon').textContent = '🌙';
+            themeToggleBtn.setAttribute('aria-label', 'Darkmode umschalten');
+        } else {
+            // Standardmäßig Dark Mode
+            htmlElement.classList.add('dark-mode');
+            htmlElement.classList.remove('light-mode');
+            themeToggleBtn.querySelector('.icon').textContent = '☀️';
+            themeToggleBtn.setAttribute('aria-label', 'Lightmode umschalten');
+        }
+        
+        // Event-Listener für den Theme-Toggle-Button
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('light-mode')) {
+                htmlElement.classList.remove('light-mode');
+                htmlElement.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.querySelector('.icon').textContent = '☀️';
+                themeToggleBtn.setAttribute('aria-label', 'Lightmode umschalten');
+            } else {
+                htmlElement.classList.remove('dark-mode');
+                htmlElement.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.querySelector('.icon').textContent = '🌙';
+                themeToggleBtn.setAttribute('aria-label', 'Darkmode umschalten');
+            }
+        });
+    }
 
     // Lade zunächst die vorhandenen Bewertungen aus dem localStorage
     function loadRatings() {
@@ -209,12 +247,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageElement = document.createElement('img');
         imageElement.src = glowUp.beforeImage;
         imageElement.alt = `${glowUp.name} vorher`;
-        imageElement.classList.add('glowup-image', 'blurred');
+        imageElement.classList.add('glowup-image', 'blurred', 'scale-in');
         imageElement.dataset.state = 'before-blurred';
         
         // Erstelle das Info-Element mit Name und Alter
         const infoElement = document.createElement('div');
-        infoElement.classList.add('person-info');
+        infoElement.classList.add('person-info', 'slide-in');
         
         // Nur Alter anzeigen, wenn es vorhanden ist
         const ageText = glowUp.age ? `<p>${glowUp.age} Jahre</p>` : '';
@@ -233,6 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Stelle die Bewertung wieder her, falls vorhanden
         restoreRating();
+        
+        // Füge Animation zum Container hinzu
+        currentGlowUpElement.classList.add('rotate-in');
+        setTimeout(() => {
+            currentGlowUpElement.classList.remove('rotate-in');
+        }, 700);
     }
 
     // Behandelt das Klicken auf das Bild
@@ -242,18 +286,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentState = imageElement.dataset.state;
         
         if (currentState === 'before-blurred') {
-            // Entferne den Blur-Effekt
+            // Entferne den Blur-Effekt mit Animation
+            imageElement.classList.add('scale-in');
             imageElement.classList.remove('blurred');
             imageElement.dataset.state = 'before-clear';
+            
+            setTimeout(() => {
+                imageElement.classList.remove('scale-in');
+            }, 600);
         } else if (currentState === 'before-clear') {
             // Wechsle zum Nachher-Bild mit Animation
             imageElement.style.opacity = 0;
+            imageElement.style.transform = 'rotateY(90deg)';
             
             setTimeout(() => {
                 imageElement.src = glowUp.afterImage;
                 imageElement.alt = `${glowUp.name} nachher`;
                 imageElement.dataset.state = 'after';
-                imageElement.style.opacity = 1;
+                
+                // Füge eine kurze Verzögerung hinzu, bevor das Bild wieder angezeigt wird
+                setTimeout(() => {
+                    imageElement.style.opacity = 1;
+                    imageElement.style.transform = 'rotateY(0deg)';
+                    imageElement.classList.add('pulse');
+                    
+                    // Entferne die Pulse-Animation nach einer Weile
+                    setTimeout(() => {
+                        imageElement.classList.remove('pulse');
+                    }, 2000);
+                }, 100);
             }, 300);
         }
     }
@@ -397,6 +458,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (goldenBuzzerResults.innerHTML === '') {
             goldenBuzzerResults.innerHTML = '<p>Keine Golden Buzzer vergeben</p>';
         }
+        
+        // Animiere die Ergebnis-Elemente
+        setTimeout(() => {
+            const resultItems = document.querySelectorAll('.result-item');
+            resultItems.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        }, 100);
     }
 
     // Erstelle das HTML für ein Ergebnis-Element
@@ -449,6 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialisierung
     function init() {
         loadRatings();
+        setupThemeToggle();
         loadGlowUps();
         setupRatingButtons();
         setupNavigationButtons();
