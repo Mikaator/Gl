@@ -51,7 +51,7 @@ header {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--light-color);
     text-align: center;
-    padding: 1.5rem 1rem;
+    padding: 1rem;
     box-shadow: 0 4px 12px var(--shadow-color);
     position: relative;
     display: flex;
@@ -60,7 +60,7 @@ header {
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     letter-spacing: 1px;
 }
 
@@ -89,13 +89,22 @@ main {
     flex: 1;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 0.5rem;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#gallery-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 7rem); /* Viewport-Höhe minus Header und Footer */
 }
 
 footer {
     text-align: center;
-    padding: 0.8rem;
+    padding: 0.7rem;
     background-color: var(--dark-color);
     color: var(--light-color);
 }
@@ -110,12 +119,13 @@ footer {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 10px 30px var(--shadow-color);
-    margin-bottom: 1.5rem;
     position: relative;
-    aspect-ratio: 1/1.2;
-    max-width: 500px;
-    max-height: 40vh;
-    margin: 0 auto 1.5rem;
+    flex: 1;
+    min-height: 65vh;
+    max-height: 70vh;
+    margin: 0 auto 0.8rem;
+    width: 100%;
+    max-width: 800px;
     transform-style: preserve-3d;
     perspective: 1000px;
 }
@@ -164,56 +174,60 @@ footer {
 .rating-container {
     background-color: var(--card-bg);
     border-radius: 12px;
-    padding: 1.2rem;
+    padding: 0.8rem;
     box-shadow: 0 5px 15px var(--shadow-color);
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .rating-container:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     box-shadow: 0 8px 25px var(--shadow-color);
 }
 
 .rating-container h3 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: var(--primary-color);
+    font-size: 1rem;
 }
 
 .rating-buttons {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.8rem;
+    flex-wrap: nowrap;
 }
 
 .rating-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.8rem;
+    padding: 0.6rem;
     background-color: var(--card-bg);
     border: 2px solid var(--secondary-color);
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     color: var(--text-color);
+    flex: 1;
+    min-width: 80px;
 }
 
 .rating-btn .icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
     transition: transform 0.3s ease;
 }
 
 .rating-btn .label {
     font-weight: bold;
+    font-size: 0.9rem;
 }
 
 .rating-btn:hover {
-    transform: translateY(-8px) scale(1.05);
-    box-shadow: 0 15px 25px var(--shadow-color);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 10px 20px var(--shadow-color);
 }
 
 .rating-btn:hover .icon {
@@ -240,11 +254,12 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
 }
 
 .navigation button {
-    padding: 0.7rem 1.3rem;
+    padding: 0.5rem 1rem;
     background-color: var(--primary-color);
     color: var(--light-color);
     border: none;
@@ -254,6 +269,22 @@ footer {
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     position: relative;
     overflow: hidden;
+    z-index: 2;
+}
+
+/* Navigation an den Seiten positionieren */
+#prev-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#next-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .navigation button:before {
@@ -280,11 +311,14 @@ footer {
 .navigation button:disabled {
     background-color: #d1d1d1;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 #progress {
     font-weight: bold;
     color: var(--primary-color);
+    text-align: center;
+    width: 100%;
 }
 
 /* Ergebnisse Styling */
@@ -466,15 +500,16 @@ footer {
     }
     
     .rating-buttons {
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
     
     .rating-btn {
-        padding: 0.75rem;
+        padding: 0.5rem;
+        min-width: 60px;
     }
     
     .rating-btn .icon {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
     }
     
     .results-category {
@@ -482,7 +517,12 @@ footer {
     }
     
     .glowup-container {
-        max-height: 35vh;
+        min-height: 50vh;
+    }
+    
+    #prev-btn, #next-btn {
+        position: static;
+        transform: none;
     }
 }
 
