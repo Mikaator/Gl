@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow-Up Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Glow-Up Gallery</h1>
+        <p>Entdecke die erstaunlichen Verwandlungen unserer Community!</p>
+    </header>
+
+    <main>
+        <div id="gallery-container">
+            <div id="current-glowup" class="glowup-container">
+                <!-- Hier wird das aktuelle Glow-Up dynamisch eingefügt -->
+            </div>
+            
+            <div class="rating-container">
+                <h3>Bewerte diesen Glow-Up</h3>
+                <div class="rating-buttons">
+                    <button id="like-btn" class="rating-btn">
+                        <span class="icon">👍</span>
+                        <span class="label">Like</span>
+                    </button>
+                    <button id="superlike-btn" class="rating-btn">
+                        <span class="icon">⭐</span>
+                        <span class="label">Superlike</span>
+                    </button>
+                    <button id="goldenbuzzer-btn" class="rating-btn">
+                        <span class="icon">🏆</span>
+                        <span class="label">Golden Buzzer</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="prev-btn" disabled>Zurück</button>
+                <span id="progress">1 / 1</span>
+                <button id="next-btn">Weiter</button>
+            </div>
+        </div>
+
+        <div id="results-container" class="hidden">
+            <h2>Deine Bewertungen</h2>
+            
+            <div class="category-container">
+                <h3>Golden Buzzer</h3>
+                <div id="golden-buzzer-results" class="results-category"></div>
+            </div>
+            
+            <div class="category-container">
+                <h3>Superlike</h3>
+                <div id="superlike-results" class="results-category"></div>
+            </div>
+            
+            <div class="category-container">
+                <h3>Like</h3>
+                <div id="like-results" class="results-category"></div>
+            </div>
+            
+            <button id="restart-btn">Neu starten</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Glow-Up Gallery</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

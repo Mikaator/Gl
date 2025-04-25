@@ -1,0 +1,17 @@
+# Platziere deine Glow-Up-Bilder hier
+
+Um deine eigenen Glow-Up-Bilder hinzuzufügen, folge bitte dieser Namenskonvention:
+
+1. Vorher-Bilder: `name..v_alter.erweiterung` (z.B. `mia..v_17.jpg`)
+2. Nachher-Bilder: `name..n_alter.erweiterung` (z.B. `mia..n_17.jpg`)
+
+Die Altersangabe mit `_alter` ist optional.
+
+## Empfohlene Bildgrößen und -formate
+
+- Größe: Bilder sollten idealerweise quadratisch sein oder ein ähnliches Seitenverhältnis haben
+- Auflösung: Empfohlen wird mindestens 800x800 Pixel
+- Format: JPG, PNG oder WebP werden unterstützt
+- Dateigrößen: Versuche, die Dateigröße unter 2MB pro Bild zu halten
+
+Die Bilder werden automatisch geladen, wenn die Webseite gestartet wird. 

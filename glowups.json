@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Mia",
+    "age": 17,
+    "beforeImage": "GlowUp/mia..v_17.jpg",
+    "afterImage": "GlowUp/mia..n_17.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Leon",
+    "age": 22,
+    "beforeImage": "GlowUp/leon..v_22.jpg",
+    "afterImage": "GlowUp/leon..n_22.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Sophia",
+    "age": 19,
+    "beforeImage": "GlowUp/sophia..v_19.jpg",
+    "afterImage": "GlowUp/sophia..n_19.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Max",
+    "age": 24,
+    "beforeImage": "GlowUp/max..v_24.jpg",
+    "afterImage": "GlowUp/max..n_24.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Emma",
+    "age": 20,
+    "beforeImage": "GlowUp/emma..v_20.jpg",
+    "afterImage": "GlowUp/emma..n_20.jpg"
+  }
+] 
